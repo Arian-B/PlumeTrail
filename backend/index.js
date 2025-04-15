@@ -1,17 +1,22 @@
-import express from "express";
-import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/users.js";
-import postRoutes from "./routes/posts.js";
-import cookieParser from "cookie-parser";
-import multer from "multer";
+import express from 'express';
+import loginRoutes from './routes/login.js';         // Renamed from auth.js
+import userRoutes from './routes/user.js';           // Renamed from users.js
+import blogRoutes from './routes/blog.js';           // Renamed from posts.js
+import blogCategoryRoutes from './routes/blogCategory.js';  // Newly added
+import commentRoutes from './routes/comment.js';    // Newly added
+import cookieParser from 'cookie-parser';
+import multer from 'multer';
 
 const app = express();
 
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// Multer storage config for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../client/public/upload");
+    cb(null, './public/upload');  // Correct path relative to the backend
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + file.originalname);
@@ -20,15 +25,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-app.post("/api/upload", upload.single("file"), function (req, res) {
+// File upload route
+app.post('/api/upload', upload.single('file'), (req, res) => {
   const file = req.file;
-  res.status(200).json(file.filename);
+  res.status(200).json({ filename: file.filename });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoutes);
+// Routes
+app.use('/api/login', loginRoutes);  // Renamed to /api/login
+app.use('/api/users', userRoutes);
+app.use('/api/blog', blogRoutes);    // Renamed to /api/blog
+app.use('/api/blogCategory', blogCategoryRoutes);  // Added blogCategory routes
+app.use('/api/comments', commentRoutes);  // Added comment routes
 
+// Start server
 app.listen(8800, () => {
-  console.log("Connected!");
+  console.log('✅ Server is running on http://localhost:8800');
 });
