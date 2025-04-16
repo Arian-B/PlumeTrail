@@ -4,12 +4,11 @@ import jwt from 'jsonwebtoken';
 // Get all blogs (with optional category filter)
 export const getBlogs = (req, res) => {
   const q = req.query.cat
-    ? 'SELECT * FROM blog WHERE blog_type = ?' // Use correct table and column names
+    ? 'SELECT * FROM blog WHERE blog_type = ?'
     : 'SELECT * FROM blog';
 
-  db.query(q, [req.query.cat], (err, data) => {
+  db.query(q, req.query.cat ? [req.query.cat] : [], (err, data) => {
     if (err) return res.status(500).send(err);
-
     return res.status(200).json(data);
   });
 };
@@ -24,7 +23,6 @@ export const getBlog = (req, res) => {
 
   db.query(q, [req.params.id], (err, data) => {
     if (err) return res.status(500).json(err);
-
     return res.status(200).json(data[0]);
   });
 };
@@ -45,10 +43,10 @@ export const addBlog = (req, res) => {
       req.body.blog_content,
       req.body.blog_type,
       userInfo.id,
-      req.body.category_id, // Assuming category is sent in the request body
+      req.body.category_id,
     ];
 
-    db.query(q, [values], (err, data) => {
+    db.query(q, [values], (err) => {
       if (err) return res.status(500).json(err);
       return res.json('Blog has been created.');
     });
@@ -66,9 +64,8 @@ export const deleteBlog = (req, res) => {
     const blogId = req.params.id;
     const q = 'DELETE FROM blog WHERE blog_id = ? AND blog_author_id = ?';
 
-    db.query(q, [blogId, userInfo.id], (err, data) => {
+    db.query(q, [blogId, userInfo.id], (err) => {
       if (err) return res.status(403).json('You can delete only your own blog!');
-
       return res.json('Blog has been deleted!');
     });
   });
@@ -94,7 +91,7 @@ export const updateBlog = (req, res) => {
       req.body.category_id,
     ];
 
-    db.query(q, [...values, blogId, userInfo.id], (err, data) => {
+    db.query(q, [...values, blogId, userInfo.id], (err) => {
       if (err) return res.status(500).json(err);
       return res.json('Blog has been updated.');
     });
