@@ -18,7 +18,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null); // Clear old errors
+    setError(null);
 
     try {
       await login(inputs);
