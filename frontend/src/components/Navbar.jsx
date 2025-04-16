@@ -6,46 +6,38 @@ import Logo from "../img/logo.png";
 const Navbar = () => {
   const { currentUser, logout } = useContext(AuthContext);
 
+  const handleLogout = () => {
+    logout().catch((err) => {
+      console.error("Logout failed:", err);
+    });
+  };
+
   return (
     <div className="navbar">
       <div className="container">
         <div className="logo">
           <Link to="/">
-          <img src={Logo} alt="" />
+            <img src={Logo} alt="PlumeTrail Logo" />
           </Link>
         </div>
         <div className="links">
-          <Link className="link" to="/?cat=art">
-            <h6>ART</h6>
-          </Link>
-          <Link className="link" to="/?cat=science">
-            <h6>SCIENCE</h6>
-          </Link>
-          <Link className="link" to="/?cat=technology">
-            <h6>TECHNOLOGY</h6>
-          </Link>
-          <Link className="link" to="/?cat=cinema">
-            <h6>CINEMA</h6>
-          </Link>
-          <Link className="link" to="/?cat=design">
-            <h6>DESIGN</h6>
-          </Link>
-          <Link className="link" to="/?cat=food">
-            <h6>FOOD</h6>
-          </Link>
-          <span>{currentUser?.username}</span>
+          {["art", "science", "technology", "cinema", "design", "food"].map((cat) => (
+            <Link className="link" to={`/?cat=${cat}`} key={cat}>
+              <h6>{cat.toUpperCase()}</h6>
+            </Link>
+          ))}
+
           {currentUser ? (
-            <span onClick={logout}>Logout</span>
+            <>
+              <span>{currentUser.username}</span>
+              <span onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</span>
+              <span className="write">
+                <Link className="link" to="/write">Write</Link>
+              </span>
+            </>
           ) : (
-            <Link className="link" to="/login">
-              Login
-            </Link>
+            <Link className="link" to="/login">Login</Link>
           )}
-          <span className="write">
-            <Link className="link" to="/write">
-              Write
-            </Link>
-          </span>
         </div>
       </div>
     </div>

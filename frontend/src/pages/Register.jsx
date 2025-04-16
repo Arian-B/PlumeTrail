@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -19,43 +18,48 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null); // Clear previous error
+
     try {
       await axios.post("/auth/register", inputs);
       navigate("/login");
     } catch (err) {
-      setError(err.response.data);
+      setError(err.response?.data || "Registration failed. Please try again.");
     }
   };
 
   return (
     <div className="auth">
       <h1>Register</h1>
-      <form>
+      <form onSubmit={handleSubmit}>
         <input
           required
           type="text"
-          placeholder="username"
+          placeholder="Username"
           name="username"
+          value={inputs.username}
           onChange={handleChange}
         />
         <input
           required
           type="email"
-          placeholder="email"
+          placeholder="Email"
           name="email"
+          value={inputs.email}
           onChange={handleChange}
         />
         <input
           required
           type="password"
-          placeholder="password"
+          placeholder="Password"
           name="password"
+          value={inputs.password}
           onChange={handleChange}
         />
-        <button onClick={handleSubmit}>Register</button>
-        {err && <p>{err}</p>}
+        <button type="submit">Register</button>
+        {err && <p className="error">{err}</p>}
         <span>
-          Do you have an account? <Link to="/login">Login</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </span>
       </form>
     </div>
