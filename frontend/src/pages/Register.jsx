@@ -17,13 +17,14 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setError(null); // Clear previous error
 
     try {
-      await axios.post("/auth/register", inputs);
+      await axios.post("/api/register", inputs); // Updated to match backend
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data || "Registration failed. Please try again.");
+      // Update error state with error message only (not the whole error object)
+      setError(err.response?.data?.message || err.response?.data || "Registration failed. Please try again.");
     }
   };
 

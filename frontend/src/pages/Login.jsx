@@ -18,13 +18,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setError(null); // Clear old errors
 
     try {
       await login(inputs);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data || "Login failed. Please try again.");
+      // Update error state with error message only (not the whole error object)
+      setError(err.response?.data?.message || err.response?.data || "Login failed. Please try again.");
     }
   };
 

@@ -9,20 +9,21 @@ export const AuthContextProvider = ({ children }) => {
   );
 
   const login = async (inputs) => {
-    const res = await axios.post("/api/login", inputs, {
-      withCredentials: true,
+    const res = await axios.post("http://localhost:8800/api/login", inputs, {
+      withCredentials: true, // Allow credentials (cookies)
     });
-    setCurrentUser(res.data);
+    setCurrentUser(res.data); // Set the user state with the response data
   };
 
   const logout = async () => {
     await axios.post("/api/login/logout", {}, {
-      withCredentials: true,
+      withCredentials: true, // Ensure credentials (cookies) are sent
     });
-    setCurrentUser(null);
+    setCurrentUser(null); // Clear the user state
   };
 
   useEffect(() => {
+    // Save currentUser to localStorage whenever it changes
     localStorage.setItem("user", JSON.stringify(currentUser));
   }, [currentUser]);
 
