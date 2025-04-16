@@ -1,9 +1,13 @@
 // db.js with Promises
 import mysql from "mysql2/promise";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 export const db = await mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "34783478",
-  database: "plumetrail",
+  host: process.env.DB_HOST,        // Database host
+  user: process.env.DB_USER,        // Database user
+  password: process.env.DB_PASSWORD, // Database password
+  database: process.env.DB_NAME,     // Database name
 });

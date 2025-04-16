@@ -1,10 +1,11 @@
-// index.js
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import dotenv from 'dotenv';
+dotenv.config();  // Load environment variables from .env file
 
 // Routes
 import loginRoutes from "./routes/login.js";
@@ -25,7 +26,7 @@ if (!fs.existsSync(uploadDir)) {
 // CORS setup - adjust frontend port as needed
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",  // Use environment variable for frontend URL
     credentials: true,
   })
 );
@@ -73,6 +74,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(8800, () => {
-  console.log("✅ Server is running at http://localhost:8800");
+const port = process.env.PORT || 8800;  // Use the PORT from .env, or fallback to 8800
+app.listen(port, () => {
+  console.log(`✅ Server is running at http://localhost:${port}`);
 });
