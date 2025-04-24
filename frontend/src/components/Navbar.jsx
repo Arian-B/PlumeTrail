@@ -1,10 +1,24 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import Logo from "../img/logo.png";
+import axios from "axios";
 
 const Navbar = () => {
   const { currentUser, logout } = useContext(AuthContext);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/blogCategory");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleLogout = () => {
     logout().catch((err) => {
@@ -21,9 +35,9 @@ const Navbar = () => {
           </Link>
         </div>
         <div className="links">
-          {["art", "science", "technology", "cinema", "design", "food"].map((cat) => (
-            <Link className="link" to={`/?cat=${cat}`} key={cat}>
-              <h6>{cat.toUpperCase()}</h6>
+          {categories.map((cat) => (
+            <Link className="link" to={`/?cat=${cat.bc_title}`} key={cat.bc_id}>
+              <h6>{cat.bc_title.toUpperCase()}</h6>
             </Link>
           ))}
 

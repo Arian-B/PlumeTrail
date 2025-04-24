@@ -30,35 +30,46 @@ export const getBlog = (req, res) => {
 // Add a new blog post
 export const addBlog = (req, res) => {
   const token = req.cookies.access_token;
-  if (!token) return res.status(401).json('Not authenticated!');
+  if (!token) return res.status(401).json("Not authenticated!");
 
-  jwt.verify(token, 'jwtkey', (err, userInfo) => {
-    if (err) return res.status(403).json('Token is not valid!');
+  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
+    if (err) return res.status(403).json("Token is not valid!");
 
-    const q = 'INSERT INTO blog(blog_title, blog_desc, blog_content, blog_type, blog_author_id, category_id) VALUES (?)';
+    const q = `
+      INSERT INTO blog (
+        blog_title,
+        blog_content,
+        blog_author_id,
+        category_id,
+        img
+      ) VALUES (?, ?, ?, ?, ?)
+    `;
 
     const values = [
       req.body.blog_title,
-      req.body.blog_desc,
       req.body.blog_content,
-      req.body.blog_type,
       userInfo.id,
-      req.body.category_id,
+      req.body.category_id || null,
+      req.body.img || null,
     ];
 
-    db.query(q, [values], (err) => {
-      if (err) return res.status(500).json(err);
-      return res.json('Blog has been created.');
+    db.query(q, values, (err) => {
+      if (err) {
+        console.error("Error inserting blog:", err);
+        return res.status(500).json("Error saving blog.");
+      }
+      return res.status(200).json({ message: "Blog has been created." });
     });
   });
 };
+
 
 // Delete a blog post
 export const deleteBlog = (req, res) => {
   const token = req.cookies.access_token;
   if (!token) return res.status(401).json('Not authenticated!');
 
-  jwt.verify(token, 'jwtkey', (err, userInfo) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
     if (err) return res.status(403).json('Token is not valid!');
 
     const blogId = req.params.id;
@@ -74,26 +85,38 @@ export const deleteBlog = (req, res) => {
 // Update a blog post
 export const updateBlog = (req, res) => {
   const token = req.cookies.access_token;
-  if (!token) return res.status(401).json('Not authenticated!');
+  if (!token) return res.status(401).json("Not authenticated!");
 
-  jwt.verify(token, 'jwtkey', (err, userInfo) => {
-    if (err) return res.status(403).json('Token is not valid!');
+  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
+    if (err) return res.status(403).json("Token is not valid!");
 
     const blogId = req.params.id;
-    const q =
-      'UPDATE blog SET blog_title = ?, blog_desc = ?, blog_content = ?, blog_type = ?, category_id = ? WHERE blog_id = ? AND blog_author_id = ?';
+
+    const q = `
+      UPDATE blog SET 
+        blog_title = ?, 
+        blog_content = ?, 
+        category_id = ?, 
+        img = ?
+      WHERE blog_id = ? AND blog_author_id = ?
+    `;
 
     const values = [
       req.body.blog_title,
-      req.body.blog_desc,
       req.body.blog_content,
-      req.body.blog_type,
-      req.body.category_id,
+      req.body.category_id || null,
+      req.body.img || null,
+      blogId,
+      userInfo.id,
     ];
 
-    db.query(q, [...values, blogId, userInfo.id], (err) => {
-      if (err) return res.status(500).json(err);
-      return res.json('Blog has been updated.');
+    db.query(q, values, (err) => {
+      if (err) {
+        console.error("Error updating blog:", err);
+        return res.status(500).json("Error updating blog.");
+      }
+      return res.status(200).json({ message: "Blog has been updated." });
     });
   });
 };
+

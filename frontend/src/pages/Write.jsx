@@ -3,58 +3,76 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import moment from "moment";
 
 const Write = () => {
   const state = useLocation().state;
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState(state?.title || "");
-  const [value, setValue] = useState(state?.desc || "");
+  const [title, setTitle] = useState(state?.blog_title || "");
+  const [content, setContent] = useState(state?.blog_content || "");
   const [file, setFile] = useState(null);
-  const [cat, setCat] = useState(state?.cat || "");
-  const [loading, setLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState(state?.category_id || "");
+  const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("http://localhost:8800/api/blogCategory", {
+          withCredentials: true,
+        });
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Could not load categories. Please try again.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const uploadImage = async () => {
     if (!file) return null;
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post("/upload", formData);
-      return res.data; // image URL
+      const res = await axios.post("http://localhost:8800/api/upload", formData, {
+        withCredentials: true,
+      });
+      return res.data;
     } catch (err) {
       console.error("Image upload failed:", err);
-      setError("Failed to upload image.");
+      return null;
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const imgUrl = await uploadImage();
+  const handleSubmit = async () => {
+    // Immediately redirect first
+    navigate("/");
+
     try {
-      const postData = {
-        title,
-        desc: value,
-        cat,
-        img: file ? imgUrl : "",
-        date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
+      const imageUrl = await uploadImage();
+
+      const blogPayload = {
+        blog_title: title,
+        blog_content: content,
+        category_id: categoryId || null,
+        img: imageUrl || "",
       };
 
       if (state) {
-        // Edit post
-        await axios.put(`/posts/${state.id}`, postData);
+        await axios.put(
+          `http://localhost:8800/api/blog/${state.blog_id}`,
+          blogPayload,
+          { withCredentials: true }
+        );
       } else {
-        // Create new post
-        await axios.post("/posts", postData);
+        await axios.post("http://localhost:8800/api/blog", blogPayload, {
+          withCredentials: true,
+        });
       }
-      navigate("/");
     } catch (err) {
-      console.error("Error saving post:", err);
-      setError("Failed to save the post. Please try again.");
-    } finally {
-      setLoading(false);
+      console.error("Blog submission error (still redirected):", err);
     }
   };
 
@@ -63,31 +81,27 @@ const Write = () => {
       <div className="content">
         <input
           type="text"
-          placeholder="Title"
+          placeholder="Blog Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+
         <div className="editorContainer">
           <ReactQuill
             className="editor"
             theme="snow"
-            value={value}
-            onChange={setValue}
+            value={content}
+            onChange={setContent}
           />
         </div>
       </div>
 
-      {error && <p className="error">{error}</p>}
-
       <div className="menu">
         <div className="item">
           <h1>Publish</h1>
-          <span>
-            <b>Status:</b> Draft
-          </span>
-          <span>
-            <b>Visibility:</b> Public
-          </span>
+          <span><b>Status:</b> Draft</span>
+          <span><b>Visibility:</b> Public</span>
+
           <input
             type="file"
             id="file"
@@ -97,29 +111,34 @@ const Write = () => {
           <label className="file" htmlFor="file">
             Upload Image
           </label>
+
           <div className="buttons">
-            <button>Save as draft</button>
-            <button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Publishing..." : "Publish"}
-            </button>
+            <button disabled>Save as draft</button>
+            <button onClick={handleSubmit}>Publish</button>
           </div>
+
+          {error && <p className="error">{error}</p>}
         </div>
 
         <div className="item">
           <h1>Category</h1>
-          {["art", "science", "technology", "cinema", "design", "food"].map((category) => (
-            <div className="cat" key={category}>
-              <input
-                type="radio"
-                checked={cat === category}
-                name="cat"
-                value={category}
-                id={category}
-                onChange={(e) => setCat(e.target.value)}
-              />
-              <label htmlFor={category}>{category.charAt(0).toUpperCase() + category.slice(1)}</label>
-            </div>
-          ))}
+          {categories.length > 0 ? (
+            categories.map((cat) => (
+              <div className="cat" key={cat.bc_id}>
+                <input
+                  type="radio"
+                  id={`cat-${cat.bc_id}`}
+                  name="category"
+                  value={cat.bc_id}
+                  checked={String(categoryId) === String(cat.bc_id)}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                />
+                <label htmlFor={`cat-${cat.bc_id}`}>{cat.bc_title}</label>
+              </div>
+            ))
+          ) : (
+            <p>Loading categories...</p>
+          )}
         </div>
       </div>
     </div>

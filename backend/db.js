@@ -11,3 +11,11 @@ export const db = await mysql.createConnection({
   password: process.env.DB_PASSWORD, // Database password
   database: process.env.DB_NAME,     // Database name
 });
+
+// Test the connection
+try {
+  await db.connect();
+  console.log("✅ Database connected successfully");
+} catch (err) {
+  console.error("❌ Database connection failed:", err);
+}

@@ -1,5 +1,6 @@
 import express from 'express';
 import { register, login, logout } from '../controllers/login.js'; // Ensure correct path
+console.log("✅ loginRoutes file loaded");
 
 const router = express.Router();
 
@@ -7,7 +8,7 @@ const router = express.Router();
 router.post('/register', register);
 
 // Login route
-router.post('/login', login);
+router.post('/', login); 
 
 // Logout route
 router.post('/logout', logout);
