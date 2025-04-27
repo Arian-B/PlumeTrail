@@ -1,37 +1,89 @@
 <<<<<<< HEAD
 
-# Getting Started with PlumeTrail App
+# PlumeTrail
 
-This project was part of a class project
+**PlumeTrail, a modern blogging platform for teenagers and individualists.**
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Features
+- Create, edit, and delete blog posts
+- Rich text editing with image support
+- User authentication (JWT-based)
+- Categories for organizing blogs
+- Responsive, clean UI
+- MySQL database with Sequelize ORM
 
-### `npm start`
+## Tech Stack
+- **Frontend:** React, React Router, Axios, React Quill, Sass
+- **Backend:** Node.js, Express, Sequelize, JWT, MySQL
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Folder Structure
+```
+PlumeTrail/
+  frontend/    # React app (client)
+  backend/     # Express API (server)
+  README.md
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [MySQL](https://www.mysql.com/) server
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 1. Clone the Repository
+```
+git clone <your-repo-url>
+cd PlumeTrail
+```
 
-### `npm run build`
+### 2. Setup the Database
+- Create a MySQL database (e.g. `plumetrail`).
+- Import or create the required tables (see `/backend/models` for structure).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 3. Configure Environment Variables
+- In `/backend`, create a `.env` file:
+  ```env
+  DB_HOST=localhost
+  DB_USER=your_mysql_user
+  DB_PASSWORD=your_mysql_password
+  DB_NAME=plumetrail
+  JWT_SECRET=your_jwt_secret
+  ```
+- Adjust as needed for your setup.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 4. Install Dependencies
+#### Frontend
+```
+cd frontend
+npm install
+```
+#### Backend
+```
+cd ../backend
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 5. Run the App
+#### Start Backend
+```
+npm run dev
+```
+#### Start Frontend
+```
+cd ../frontend
+npm start
+```
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:5050](http://localhost:5050)
 
-### `npm run eject`
+## Usage
+- Register a new account, log in, and start blogging!
+- Only authors can edit/delete their own blogs.
+
+## License
+This project is for educational purposes.
 
 **Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
