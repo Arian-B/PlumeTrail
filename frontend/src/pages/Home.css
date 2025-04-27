@@ -1,0 +1,161 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #f7f7f7;
+  min-height: 100vh;
+  padding-top: 2.5rem;
+  padding-left: 2vw;
+  padding-right: 2vw;
+  padding-bottom: 3.5rem;
+}
+
+.posts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.post {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 2px solid #e0e0e0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-width: 320px;
+  max-width: 480px;
+  width: 100%;
+  min-height: 160px;
+  transition: box-shadow 0.2s, border 0.18s;
+  flex: 1 1 48%; /* Allow up to 2 cards per row, with gap */
+  box-sizing: border-box;
+}
+
+.post:hover {
+  border: 2px solid #00cccc;
+}
+
+@media (max-width: 900px) {
+  .post {
+    flex: 1 1 100%; /* 1 card per row on small screens */
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.post:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.post .img {
+  width: 140px;
+  height: 120px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 1.2rem;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post .img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post.no-image {
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 260px;
+  max-width: 400px;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.post.no-image .img {
+  display: none;
+}
+
+.post .content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.post .content h1 {
+  font-size: 1.3rem;
+  margin: 0 0 0.7rem 0;
+  color: #008b94;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.post .content .link h1 {
+  text-decoration: none;
+  color: #008b94;
+}
+
+.post .content .link,
+.post .content .link:visited,
+.post .content .link:active,
+.post .content .link:hover {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.post .content p, .blog-preview-text {
+  color: #b0b0b0;
+  font-size: 1rem;
+  margin-bottom: 1.1rem;
+  max-height: 2.8em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.post .content p {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.post .content .link button {
+  background: #008b94;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.post .content .link button:hover {
+  background: #00ffff;
+  color: #008b94;
+  box-shadow: 0 0 12px 2px #00e6ee66;
+}
+
+.no-posts {
+  color: #888;
+  font-size: 1.2rem;
+  margin-top: 3rem;
+  text-align: center;
+}

@@ -1,12 +1,12 @@
-import express from "express";
-import { getUsers, getUser } from '../controllers/user.js';  // Updated to match controller function names
-import { updateUser, deleteUser } from "../controllers/user.js";  // Keep the other routes as is
+import express from 'express';
+import { register, getUserById } from '../controllers/user.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get("/", getUsers);  // This uses getUsers from controller
-router.get("/:id", getUser);  // This uses getUser from controller (note: getUser instead of getUserById)
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser);
+router.post('/register', register); // User registration
+
+// Protected route: get user info by ID (optional, e.g. for profile)
+router.get('/:id', auth, getUserById);
 
 export default router;

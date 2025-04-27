@@ -1,122 +1,131 @@
-import { db } from '../db.js';
-import jwt from 'jsonwebtoken';
+import { sequelize } from '../models/index.js';
+const { Blog, User, BlogCategory } = sequelize.models;
 
-// Get all blogs (with optional category filter)
-export const getBlogs = (req, res) => {
-  const q = req.query.cat
-    ? 'SELECT * FROM blog WHERE blog_type = ?'
-    : 'SELECT * FROM blog';
-
-  db.query(q, req.query.cat ? [req.query.cat] : [], (err, data) => {
-    if (err) return res.status(500).send(err);
-    return res.status(200).json(data);
-  });
-};
-
-// Get a single blog by ID
-export const getBlog = (req, res) => {
-  const q = `
-    SELECT b.blog_id, u.username, b.blog_title, b.blog_desc, b.blog_content, b.blog_type, b.created_at, u.img AS userImg
-    FROM users u
-    JOIN blog b ON u.user_id = b.blog_author_id
-    WHERE b.blog_id = ?`;
-
-  db.query(q, [req.params.id], (err, data) => {
-    if (err) return res.status(500).json(err);
-    return res.status(200).json(data[0]);
-  });
-};
-
-// Add a new blog post
-export const addBlog = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated!");
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    const q = `
-      INSERT INTO blog (
-        blog_title,
-        blog_content,
-        blog_author_id,
-        category_id,
-        img
-      ) VALUES (?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      req.body.blog_title,
-      req.body.blog_content,
-      userInfo.id,
-      req.body.category_id || null,
-      req.body.img || null,
-    ];
-
-    db.query(q, values, (err) => {
-      if (err) {
-        console.error("Error inserting blog:", err);
-        return res.status(500).json("Error saving blog.");
-      }
-      return res.status(200).json({ message: "Blog has been created." });
+// Create a new blog
+export const createBlog = async (req, res) => {
+  try {
+    const { blog_title, blog_content, category_id, img } = req.body;
+    const userId = req.userId; // Set by JWT middleware
+    const blog = await Blog.create({
+      blog_title,
+      blog_content,
+      blog_author_id: userId,
+      category_id,
+      img
     });
-  });
+    res.status(201).json({ message: 'Blog created successfully!', blog });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-
-// Delete a blog post
-export const deleteBlog = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json('Not authenticated!');
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
-    if (err) return res.status(403).json('Token is not valid!');
-
-    const blogId = req.params.id;
-    const q = 'DELETE FROM blog WHERE blog_id = ? AND blog_author_id = ?';
-
-    db.query(q, [blogId, userInfo.id], (err) => {
-      if (err) return res.status(403).json('You can delete only your own blog!');
-      return res.json('Blog has been deleted!');
+// Get all blogs (optionally with pagination)
+export const getAllBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.findAll({
+      include: [
+        { model: User, attributes: ['username'] },
+        { model: BlogCategory, attributes: ['bc_title'] }
+      ],
+      order: [['created_at', 'DESC']]
     });
-  });
+    res.status(200).json(blogs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// Update a blog post
-export const updateBlog = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated!");
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    const blogId = req.params.id;
-
-    const q = `
-      UPDATE blog SET 
-        blog_title = ?, 
-        blog_content = ?, 
-        category_id = ?, 
-        img = ?
-      WHERE blog_id = ? AND blog_author_id = ?
-    `;
-
-    const values = [
-      req.body.blog_title,
-      req.body.blog_content,
-      req.body.category_id || null,
-      req.body.img || null,
-      blogId,
-      userInfo.id,
-    ];
-
-    db.query(q, values, (err) => {
-      if (err) {
-        console.error("Error updating blog:", err);
-        return res.status(500).json("Error updating blog.");
-      }
-      return res.status(200).json({ message: "Blog has been updated." });
+// Get recent blogs for homepage (limit 5)
+export const getRecentBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.findAll({
+      include: [
+        { model: User, attributes: ['username'] },
+        { model: BlogCategory, attributes: ['bc_title'] }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: 5
     });
-  });
+    res.status(200).json(blogs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
+// Get blogs by category
+export const getBlogsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const blogs = await Blog.findAll({
+      where: { category_id: categoryId },
+      include: [
+        { model: User, attributes: ['username'] },
+        { model: BlogCategory, attributes: ['bc_title'] }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+    res.status(200).json(blogs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get single blog by ID
+export const getBlogById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const blog = await Blog.findByPk(id, {
+      include: [
+        { model: User, attributes: ['username'] },
+        { model: BlogCategory, attributes: ['bc_title'] }
+      ]
+    });
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    res.status(200).json(blog);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Update a blog (only author can update)
+export const updateBlog = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const blog = await Blog.findByPk(id);
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    if (blog.blog_author_id !== userId) return res.status(403).json({ message: 'Not authorized' });
+    const { blog_title, blog_content, category_id, img } = req.body;
+    await blog.update({ blog_title, blog_content, category_id, img });
+    res.status(200).json({ message: 'Blog updated successfully!', blog });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete a blog (only author can delete)
+export const deleteBlog = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const blog = await Blog.findByPk(id, { transaction: t });
+    if (!blog) {
+      await t.rollback();
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    if (blog.blog_author_id !== userId) {
+      await t.rollback();
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    // Delete all comments related to this blog
+    await sequelize.models.Comment.destroy({ where: { comm_blog_id: id }, transaction: t });
+    // Delete the blog itself
+    await blog.destroy({ transaction: t });
+    await t.commit();
+    res.status(200).json({ message: 'Blog and related comments deleted successfully!' });
+  } catch (err) {
+    await t.rollback();
+    res.status(500).json({ error: err.message });
+  }
+};

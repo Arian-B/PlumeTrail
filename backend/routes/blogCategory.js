@@ -1,18 +1,14 @@
-import express from "express";
-import {
-  getBlogCategories,
-  getBlogCategory,
-  addBlogCategory,
-  updateBlogCategory,
-  deleteBlogCategory,
-} from "../controllers/blogCategory.js";
+import express from 'express';
+import { createCategory, getAllCategories, getCategoryById } from '../controllers/blogCategory.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get("/", getBlogCategories);
-router.get("/:id", getBlogCategory);
-router.post("/", addBlogCategory);
-router.put("/:id", updateBlogCategory);
-router.delete("/:id", deleteBlogCategory);
+// Public routes
+router.get('/', getAllCategories); // Get all categories
+router.get('/:id', getCategoryById); // Get single category by ID
+
+// Protected routes
+router.post('/', auth, createCategory); // Create a new category
 
 export default router;

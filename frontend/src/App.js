@@ -1,73 +1,32 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Route,
-  Outlet,
-} from "react-router-dom";
-
-import Register from "./pages/Register";
-import Login from "./pages/Login";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// Import pages (to be created)
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Write from "./pages/Write";
-import Home from "./pages/Home";
-import Single from "./pages/Single";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import "./style.scss";
-
-// Simple 404 Component – you can replace it later with a styled one
-const NotFound = () => <div className="not-found">404 - Page Not Found</div>;
-
-const Layout = () => {
-  return (
-    <>
-      <Navbar />
-      <Outlet />
-      <Footer />
-    </>
-  );
-};
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-      {
-        path: "/post/:id",
-        element: <Single />,
-      },
-      {
-        path: "/write",
-        element: <Write />,
-      },
-    ],
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+import Edit from "./pages/Edit";
+import Single from './pages/Single';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 function App() {
   return (
-    <div className="app">
-      <div className="container">
-        <RouterProvider router={router} />
+    <BrowserRouter>
+      <div style={{ minHeight: '100vh', background: 'white', display: 'flex', flexDirection: 'column' }}>
+        <Navbar />
+        <div style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/write" element={<Write />} />
+        <Route path="/edit/:id" element={<Edit />} />
+            <Route path="/blog/:id" element={<Single />} />
+          </Routes>
+        </div>
+        <Footer />
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
-
 export default App;

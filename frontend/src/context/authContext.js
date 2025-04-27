@@ -9,21 +9,30 @@ export const AuthContextProvider = ({ children }) => {
   );
 
   const login = async (inputs) => {
-    const res = await axios.post("http://localhost:8800/api/login", inputs, {
+    const res = await axios.post("/api/login", inputs, {
       withCredentials: true,
     });
-    setCurrentUser(res.data);
+    setCurrentUser(res.data.user);
+    // Optionally store JWT if backend returns it
+    if (res.data.token) {
+      localStorage.setItem("token", res.data.token);
+    }
   };
 
   const logout = async () => {
-    await axios.post("http://localhost:8800/api/login/logout", {}, {
-      withCredentials: true,
-    });
+    // If you have a backend logout endpoint, call it here
+    // await axios.post("/api/login/logout", {}, { withCredentials: true });
     setCurrentUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(currentUser));
+    if (currentUser) {
+      localStorage.setItem("user", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [currentUser]);
 
   return (

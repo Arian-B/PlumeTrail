@@ -1,99 +1,46 @@
-import { db } from '../db.js';
+import { sequelize } from '../models/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+const { Login, User, Role } = sequelize.models;
 
-// Register endpoint
-export const register = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    console.log("🔍 Incoming registration request:", { username });
-
-    // Check if user already exists
-    const checkQuery = 'SELECT * FROM users WHERE username = ?';
-    const [existingUser] = await db.query(checkQuery, [username]);
-    console.log("👤 User exists check result:", existingUser);
-
-    if (existingUser.length) {
-      return res.status(409).json({ message: 'User already exists!' });
-    }
-
-    // Hash password
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
-    console.log("🔐 Password hashed");
-
-    // Insert into login table
-    const insertLoginQuery = 'INSERT INTO login (login_role_id, login_username, user_password) VALUES (?, ?, ?)';
-    const [loginResult] = await db.query(insertLoginQuery, [2, username, hashedPassword]);
-    const loginId = loginResult.insertId;
-    console.log("🪪 Login record inserted with ID:", loginId);
-
-    // Insert into users table
-    const insertUserQuery = 'INSERT INTO users (username, password, login_id) VALUES (?, ?, ?)';
-    await db.query(insertUserQuery, [username, hashedPassword, loginId]);
-    console.log("📋 User record inserted");
-
-    return res.status(200).json({ message: 'User has been registered.' });
-  } catch (err) {
-    console.error('❌ Registration error:', err);
-    return res.status(500).json({ message: 'Something went wrong during registration.' });
-  }
-};
-
-
-// Login endpoint
+// User login
 export const login = async (req, res) => {
   try {
-    console.log('Login endpoint hit'); // Debug log
-    const { username, password } = req.body;
-
-    const loginQuery = `
-      SELECT u.*, l.login_role_id, r.role_name
-      FROM users u
-      JOIN login l ON u.login_id = l.login_id
-      JOIN roles r ON l.login_role_id = r.role_id
-      WHERE u.username = ?
-    `;
-
-    const [userRows] = await db.query(loginQuery, [username]);
-
-    if (userRows.length === 0) {
-      return res.status(404).json({ message: 'User not found!' });
+    // Accept both {username, password} and {login_username, password} from frontend
+    const login_username = req.body.login_username || req.body.username;
+    const password = req.body.password;
+    console.log('[LOGIN] Received login_username:', login_username, 'password:', typeof password === 'string' ? '[HIDDEN]' : password);
+    if (!login_username || !password) {
+      return res.status(400).json({ message: 'Username and password are required.' });
     }
+    // Find the login record
+    const login = await Login.findOne({
+      where: { login_username },
+      include: [{ model: Role, attributes: ['role_name', 'permission_type'] }]
+    });
+    if (!login) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const user = userRows[0];
+    // Check password
+    const isMatch = await bcrypt.compare(password, login.user_password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: 'Wrong username or password!' });
-    }
+    // Find the user record
+    const user = await User.findOne({ where: { login_id: login.login_id } });
+    if (!user) return res.status(400).json({ message: 'User not found' });
 
-    const token = jwt.sign({ id: user.user_id }, process.env.JWT_SECRET);
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    const { password: _, ...userData } = user;
-
-    res
-      .cookie('access_token', token, {
-        httpOnly: true,
-        secure: false,          // set to true if using HTTPS (e.g. in prod)
-        sameSite: 'Lax',       // <- crucial for cross-origin cookies
-      })
-      .status(200)
-      .json(userData);
+    res.status(200).json({
+      token,
+      user: {
+        user_id: user.user_id,
+        username: user.username,
+        role: login.Role.role_name,
+        permission: login.Role.permission_type
+      }
+    });
   } catch (err) {
-    console.error('Login error:', err);
-    return res.status(500).json({ message: 'Something went wrong during login.' });
+    res.status(500).json({ error: err.message });
   }
-};
-
-// Logout endpoint
-export const logout = (req, res) => {
-  res
-    .clearCookie('access_token', {
-      httpOnly: true,
-      sameSite: 'Lax',
-      secure: false,
-    })
-    .status(200)
-    .json({ message: 'User has been logged out.' });
 };

@@ -1,23 +1,14 @@
-import express from "express";
-import {
-  getComments,
-  addComment,
-  updateComment,
-  deleteComment,
-} from "../controllers/comment.js";
+import express from 'express';
+import { addComment, getCommentsByBlog, deleteComment } from '../controllers/comment.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all comments for a specific blog
-router.get("/:blogId", getComments);
+// Public route
+router.get('/blog/:blogId', getCommentsByBlog); // Get all comments for a blog
 
-// Add a comment
-router.post("/", addComment);
-
-// Update a comment
-router.put("/:id", updateComment);
-
-// Delete a comment
-router.delete("/:id", deleteComment);
+// Protected route
+router.post('/', auth, addComment); // Add a comment to a blog
+router.delete('/:comm_id', auth, deleteComment); // Delete a comment
 
 export default router;

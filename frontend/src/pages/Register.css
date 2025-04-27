@@ -1,0 +1,105 @@
+.register-page-bg {
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-box {
+  background: #00cccc;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  min-width: 340px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.register-title {
+  color: #fff;
+  font-family: 'Pacifico', cursive;
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  letter-spacing: 1px;
+}
+
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+
+.register-input {
+  padding: 0.9rem 1.2rem;
+  border: 1.5px solid #111;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  background: #fff;
+  color: #111;
+  outline: none;
+  transition: border 0.18s;
+}
+
+.register-input::placeholder {
+  color: #555;
+  opacity: 1;
+  font-size: 0.92rem;
+}
+.register-input::-webkit-input-placeholder { color: #555; font-size: 0.92rem; }
+.register-input:-moz-placeholder { color: #555; font-size: 0.92rem; }
+.register-input::-moz-placeholder { color: #555; font-size: 0.92rem; }
+.register-input:-ms-input-placeholder { color: #555; font-size: 0.92rem; }
+
+.register-input:focus {
+  border: 1.5px solid #fff;
+}
+
+.register-btn {
+  background: #fff;
+  color: #00b4d8;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.8rem;
+  transition: background 0.18s, color 0.18s;
+}
+
+.register-btn:hover {
+  background: #b284be;
+  color: #fff;
+}
+
+.register-extra {
+  margin-top: 1.5rem;
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.register-extra a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  transition: color 0.18s;
+}
+
+.register-extra a:hover {
+  color: #b284be;
+}
+
+.register-error {
+  color: #fff;
+  background: rgba(255,0,0,0.18);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}

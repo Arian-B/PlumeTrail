@@ -1,60 +1,69 @@
-import { db } from "../db.js";
-import jwt from "jsonwebtoken";
+import { sequelize } from '../models/index.js';
+import bcrypt from 'bcryptjs';
+const { User, Login, Role } = sequelize.models;
 
-// Get all users
-export const getUsers = (req, res) => {
-  const q = "SELECT * FROM users";
+// Register a new user
+export const register = async (req, res) => {
+  try {
+    // Extra debug: show type and value of req.body
+    console.log('[REGISTER] Incoming req.body:', req.body, 'Type:', typeof req.body);
+    const { username, password } = req.body || {};
+    console.log('[REGISTER] Extracted username:', username, 'password:', password);
+    if (!username || !password) {
+      console.error('[REGISTER] Missing username or password:', { username, password });
+      return res.status(400).json({ message: 'Username and password are required.' });
+    }
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      console.error('[REGISTER] Username and password must be strings:', { username, password });
+      return res.status(400).json({ message: 'Invalid input types.' });
+    }
+    // Check if username already exists in login table
+    const exists = await Login.findOne({ where: { login_username: username } });
+    if (exists) {
+      console.error('[REGISTER] Username already exists:', username);
+      return res.status(400).json({ message: 'Username already exists' });
+    }
 
-  db.query(q, (err, data) => {
-    if (err) return res.status(500).json(err);
-    return res.status(200).json(data);
-  });
-};
+    // Hash the password using bcryptjs
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-// Get a single user by ID
-export const getUser = (req, res) => {
-  const q = "SELECT * FROM users WHERE user_id = ?";
+    // Determine role: first user is admin, others are user
+    const userCount = await User.count();
+    const login_role_id = userCount === 0 ? 1 : 2; // 1 = admin, 2 = user
 
-  db.query(q, [req.params.id], (err, data) => {
-    if (err) return res.status(500).json(err);
-    if (data.length === 0) return res.status(404).json("User not found!");
-    return res.status(200).json(data[0]);
-  });
-};
-
-// Update user details
-export const updateUser = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated!");
-
-  jwt.verify(token, "jwtkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    const q =
-      "UPDATE users SET username = ?, email = ? WHERE user_id = ?";
-
-    const values = [req.body.username, req.body.email];
-
-    db.query(q, [...values, userInfo.id], (err, data) => {
-      if (err) return res.status(500).json(err);
-      return res.status(200).json("User has been updated.");
+    // Create login record (username used for login)
+    const login = await Login.create({
+      login_username: username,
+      user_password: hashedPassword,
+      login_role_id
     });
-  });
+
+    // Create user record (username used for display)
+    const user = await User.create({
+      username,
+      password: hashedPassword,
+      login_id: login.login_id
+    });
+
+    console.log('[REGISTER] User registered:', username);
+    res.status(201).json({ message: 'User registered successfully!', user });
+  } catch (err) {
+    console.error('[REGISTER] Registration error:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// Delete a user
-export const deleteUser = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated!");
-
-  jwt.verify(token, "jwtkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    const q = "DELETE FROM users WHERE user_id = ?";
-
-    db.query(q, [req.params.id], (err, data) => {
-      if (err) return res.status(500).json(err);
-      return res.status(200).json("User has been deleted.");
+// (Optional) Get user info by ID
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id, {
+      attributes: ['user_id', 'username', 'email', 'created_at', 'login_id'],
+      include: [{ model: Login, include: [{ model: Role, attributes: ['role_name'] }] }]
     });
-  });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
