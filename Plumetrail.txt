@@ -1,0 +1,80 @@
+Plumetrail
+
+users:
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    login_id INT NOT NULL,
+    CONSTRAINT chk_password_length CHECK (LENGTH(password) >= 5),
+    CONSTRAINT chk_username_format CHECK (username REGEXP '^[a-zA-Z0-9_]+$'),
+    CONSTRAINT chk_email_format CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    CONSTRAINT fk_user_login FOREIGN KEY (login_id) REFERENCES login(login_id) ON DELETE CASCADE
+);
+
+login:
+CREATE TABLE login (
+    login_id INT AUTO_INCREMENT PRIMARY KEY,
+    login_role_id INT NOT NULL,
+    login_username VARCHAR(50) NOT NULL UNIQUE,
+    user_password VARCHAR(255) NOT NULL,
+    CONSTRAINT chk_password_hashed CHECK (user_password LIKE '$2b$%'),
+    CONSTRAINT chk_valid_role CHECK (login_role_id IN (1, 2)),
+    CONSTRAINT chk_username_length CHECK (LENGTH(login_username) BETWEEN 3 AND 50),
+    CONSTRAINT fk_login_role FOREIGN KEY (login_role_id) REFERENCES roles(role_id) ON DELETE CASCADE
+);
+
+roles:
+CREATE TABLE roles (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(50) NOT NULL UNIQUE,
+    role_desc TEXT,
+    permission_type VARCHAR(50),
+    CONSTRAINT chk_permission_type CHECK (permission_type IN ('read', 'write', 'manage'))
+);
+
+blog:
+CREATE TABLE blog (
+    blog_id INT AUTO_INCREMENT PRIMARY KEY,
+    blog_title VARCHAR(255) NOT NULL,
+    blog_content TEXT NOT NULL,
+    blog_author_id INT NOT NULL,
+    category_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    comments_count INT DEFAULT 0,
+    img  VARCHAR(255)
+    CONSTRAINT chk_blog_title_length CHECK (LENGTH(blog_title) BETWEEN 5 AND 255),
+    CONSTRAINT chk_comments_count_non_negative CHECK (comments_count >= 0),
+    CONSTRAINT chk_blog_content_length CHECK (LENGTH(blog_content) > 0),
+    CONSTRAINT fk_blog_user FOREIGN KEY (blog_author_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_blog_category FOREIGN KEY (category_id) REFERENCES blog_category(bc_id) ON DELETE SET NULL
+);
+
+blog_category:
+CREATE TABLE blog_category (
+    bc_id INT AUTO_INCREMENT PRIMARY KEY,
+    bc_title VARCHAR(100) NOT NULL UNIQUE,
+    bc_type VARCHAR(50),
+    bc_desc TEXT,
+    bc_content TEXT,
+    user_id INT NOT NULL,
+    CONSTRAINT chk_bc_title_length CHECK (LENGTH(bc_title) BETWEEN 3 AND 100),
+    CONSTRAINT chk_bc_desc_length CHECK (LENGTH(bc_desc) <= 500),
+    CONSTRAINT fk_category_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+comments:
+CREATE TABLE comments (
+    comm_id INT AUTO_INCREMENT PRIMARY KEY,
+    comm_user_id INT NOT NULL,
+    comm_blog_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_comment_content_length CHECK (LENGTH(content) BETWEEN 1 AND 1000),
+    CONSTRAINT chk_created_at_future CHECK (created_at <= NOW()),
+    CONSTRAINT unique_user_blog_comment UNIQUE (comm_user_id, comm_blog_id),
+    CONSTRAINT fk_comment_user FOREIGN KEY (comm_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_blog FOREIGN KEY (comm_blog_id) REFERENCES blog(blog_id) ON DELETE CASCADE
+);
